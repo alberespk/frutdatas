@@ -3,7 +3,8 @@ import Link from "next/link";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Estrutura } from "@/components/Estrutura";
 import { textoStatus, useStatusSync } from "@/components/StatusSync";
-import { Cartao, EmBreve } from "@/components/ui";
+import { Painel } from "@/components/Painel";
+import { Cartao } from "@/components/ui";
 import { useEstoque, useMapa } from "@/lib/consultas";
 import { db } from "@/lib/db";
 import { estaParado } from "@/lib/estoque";
@@ -62,16 +63,7 @@ export default function Inicio() {
       </div>
 
       {ehSocio ? (
-        <EmBreve
-          etapa={7}
-          titulo="Painel"
-          itens={[
-            "Compras e vendas do dia, semana e mês",
-            "A pagar e a receber, com vencidos em destaque",
-            "Estoque atual, margem média e perdas do período",
-            "Ranking de produtores e clientes",
-          ]}
-        />
+        <Painel />
       ) : (
         <Cartao>
           <p>
