@@ -74,7 +74,7 @@ function EditarUsuario({ usuario, lista, aoFechar }: { usuario: Registro; lista:
         <Rotulo texto="Nome" obrigatorio>
           <input className={classeEntrada} value={nome} onChange={(e) => setNome(e.target.value)} />
         </Rotulo>
-        <Rotulo texto="Perfil" ajuda="Campo lança compras, colheitas, perdas e despesas de viagem; não vê vendas nem financeiro.">
+        <Rotulo grupo texto="Perfil" ajuda="Campo lança compras, colheitas, perdas e despesas de viagem; não vê vendas nem financeiro.">
           <div className="grid grid-cols-2 gap-2">
             {[
               ["socio", "Sócio"],

@@ -27,6 +27,18 @@ export class BancoLocal extends Dexie {
     };
     for (const t of TABELAS) esquema[t] = "&id, atualizado_em, sincronizado_em";
     this.version(1).stores(esquema);
+    // v2: índices para buscar itens, contas e movimentos de cada lançamento.
+    this.version(2).stores({
+      ...esquema,
+      compras: "&id, atualizado_em, sincronizado_em, data, fornecedor_id",
+      compra_itens: "&id, atualizado_em, sincronizado_em, compra_id, produto_id",
+      colheitas: "&id, atualizado_em, sincronizado_em, ciclo_id, data",
+      colheita_itens: "&id, atualizado_em, sincronizado_em, colheita_id",
+      despesas: "&id, atualizado_em, sincronizado_em, data, ciclo_id, viagem_id",
+      titulos: "&id, atualizado_em, sincronizado_em, origem_id, tipo",
+      baixas: "&id, atualizado_em, sincronizado_em, titulo_id, movimento_id",
+      movimentos_estoque: "&id, atualizado_em, sincronizado_em, origem_id, produto_id",
+    });
   }
 
   t(tabela: NomeTabela): Table<Registro, string> {
