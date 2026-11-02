@@ -31,7 +31,7 @@ npm test                     # testes do banco, da sincronização e dos formato
 
 ### Banco de dados
 
-As migrações ficam em `supabase/migrations/` e os dados de exemplo (fictícios) em `supabase/seed.sql`.
+As migrações ficam em `supabase/migrations/` e as listas iniciais (classificações, categorias de despesa, motivos de perda) em `supabase/seed.sql`.
 Num projeto Supabase novo, rode as migrações em ordem no SQL Editor e depois o `seed.sql`.
 
 ### Usuários

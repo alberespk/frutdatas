@@ -38,6 +38,12 @@ beforeAll(async () => {
   await db.exec(SIMULA_SUPABASE);
   for (const m of migracoes) await db.exec(readFileSync(join(pasta, "migrations", m), "utf8"));
   await db.exec(readFileSync(join(pasta, "seed.sql"), "utf8"));
+  // Cadastros mínimos para os testes (o seed não traz mais dados fictícios).
+  await db.exec(`
+    insert into public.clientes (nome, prazo_dias) values ('Cliente Teste', 7), ('Cliente Dois', 0);
+    insert into public.produtos (nome, unidade) values ('Produto Teste', 'caixa');
+    insert into public.fornecedores (nome, tipo) values ('Produtor Teste', 'produtor');
+  `);
   await db.exec(`
     insert into auth.users (id, email, raw_user_meta_data) values
       ('${SOCIO}', 'socio@frutdatas.test', '{"nome":"Sócio Teste"}'),
@@ -57,12 +63,24 @@ describe("usuários", () => {
   });
 });
 
-describe("dados de exemplo", () => {
-  it("carrega produtores, clientes e produtos", async () => {
-    const r = await db.query<{ f: number; c: number; p: number }>(
-      "select (select count(*)::int from fornecedores) f, (select count(*)::int from clientes) c, (select count(*)::int from produtos) p",
+describe("listas iniciais", () => {
+  it("seed traz só classificações, categorias e motivos de perda", async () => {
+    const r = await db.query<{ cl: number; ca: number; mo: number; ar: number }>(
+      "select (select count(*)::int from classificacoes) cl, (select count(*)::int from categorias_despesa) ca, (select count(*)::int from motivos_perda) mo, (select count(*)::int from areas) ar",
     );
-    expect(r.rows[0]).toEqual({ f: 7, c: 6, p: 9 });
+    expect(r.rows[0]).toEqual({ cl: 4, ca: 12, mo: 5, ar: 0 });
+  });
+
+  it("limpeza cancela cadastros de exemplo sem lançamentos e preserva os demais", async () => {
+    await db.exec(`insert into public.fornecedores (nome, tipo) values ('Sebastião Rodrigues', 'produtor')`);
+    await db.exec(readFileSync(join(pasta, "migrations", "20261102000003_remover_dados_exemplo.sql"), "utf8"));
+    const r = await db.query<{ nome: string; cancelado: boolean }>(
+      "select nome, cancelado_em is not null cancelado from fornecedores order by nome",
+    );
+    expect(r.rows).toEqual([
+      { nome: "Produtor Teste", cancelado: false },
+      { nome: "Sebastião Rodrigues", cancelado: true },
+    ]);
   });
 });
 
@@ -98,7 +116,7 @@ describe("permissões", () => {
     const campo = await como(CAMPO, () => db.query("select id from clientes"));
     const socio = await como(SOCIO, () => db.query("select id from clientes"));
     expect(campo.rows.length).toBe(0);
-    expect(socio.rows.length).toBe(6);
+    expect(socio.rows.length).toBe(2);
   });
 
   it("campo vê produtos e fornecedores para lançar compras", async () => {
