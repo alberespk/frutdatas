@@ -1,14 +1,15 @@
 "use client";
 // Lançamento de compra em 3 passos: fornecedor → itens → pagamento.
 import Link from "next/link";
-import { Suspense, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Estrutura } from "@/components/Estrutura";
 import { EntradaNumero, EscolherDaLista, EscolherPagamento, Opcoes, Passos } from "@/components/lancamento";
 import { Botao, Cartao, classeEntrada, Rotulo } from "@/components/ui";
 import { ativos, ordenarPorNome, ultimoPreco, useTabela } from "@/lib/consultas";
 import { formatarData, formatarMoeda, formatarNumero, hoje, mascararTelefone } from "@/lib/formato";
-import { montarCompra, totalItens, type ItemCompra, type Pagamento } from "@/lib/lancamentos";
+import { montarCompra, montarEdicaoCompra, totalItens, type ItemCompra, type Pagamento } from "@/lib/lancamentos";
+import { db } from "@/lib/db";
 import { useSessao } from "@/lib/sessao";
 import type { Registro } from "@/lib/tabelas";
 
@@ -21,8 +22,12 @@ export default function Pagina() {
 }
 
 function NovaCompra() {
-  const viagemParam = useSearchParams().get("viagem");
+  const params = useSearchParams();
+  const viagemParam = params.get("viagem");
+  const editarId = params.get("editar");
   const { salvarVarios, salvar } = useSessao();
+  const [edicao, setEdicao] = useState<{ compra: Registro; titulo?: Registro; itens: Registro[]; movs: Registro[] } | null>(null);
+  const [vencimento, setVencimento] = useState(hoje());
   const [passo, setPasso] = useState(1);
   const [fornecedor, setFornecedor] = useState<Registro | null>(null);
   const [itens, setItens] = useState<ItemCompra[]>([]);
@@ -33,6 +38,33 @@ function NovaCompra() {
   const [observacao, setObservacao] = useState("");
   const [salva, setSalva] = useState<{ total: number; nome: string } | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+
+  // Edição: carrega a compra uma vez e preenche a tela.
+  useEffect(() => {
+    if (!editarId) return;
+    let vivo = true;
+    (async () => {
+      const compra = await db.t("compras").get(editarId);
+      if (!compra || compra.cancelado_em || !vivo) return;
+      const itensC = (await db.t("compra_itens").where("compra_id").equals(editarId).toArray()).filter((i) => !i.cancelado_em);
+      const movs = (await db.t("movimentos_estoque").where("origem_id").anyOf(itensC.map((i) => i.id)).toArray()).filter((m) => !m.cancelado_em);
+      const titulo = (await db.t("titulos").where("origem_id").equals(editarId).toArray()).find((t) => !t.cancelado_em);
+      const forn = await db.t("fornecedores").get(String(compra.fornecedor_id));
+      if (!vivo) return;
+      setEdicao({ compra, titulo, itens: itensC, movs });
+      setFornecedor(forn ?? null);
+      setItens(itensC.map((i) => ({ produto_id: String(i.produto_id), classificacao_id: (i.classificacao_id as string) ?? null, quantidade: Number(i.quantidade), preco_unitario: Number(i.preco_unitario) })));
+      setData(String(compra.data));
+      setOrigem(compra.origem === "retorno" ? "retorno" : "regional");
+      setViagemId((compra.viagem_id as string) ?? null);
+      setObservacao(String(compra.observacao ?? ""));
+      setVencimento(String(titulo?.vencimento ?? compra.data));
+      setPasso(2);
+    })();
+    return () => {
+      vivo = false;
+    };
+  }, [editarId]);
 
   const fornecedores = useTabela("fornecedores", ativos);
   const compras = useTabela("compras");
@@ -59,7 +91,7 @@ function NovaCompra() {
 
   if (salva) {
     return (
-      <Estrutura titulo="Compra registrada">
+      <Estrutura titulo={edicao ? "Compra alterada" : "Compra registrada"}>
         <Cartao className="space-y-2 text-center">
           <div className="text-5xl">✅</div>
           <div className="font-marca text-2xl font-bold">{formatarMoeda(salva.total)}</div>
@@ -69,6 +101,7 @@ function NovaCompra() {
         <Botao
           onClick={() => {
             setSalva(null);
+            setEdicao(null);
             setFornecedor(null);
             setItens([]);
             setObservacao("");
@@ -85,7 +118,7 @@ function NovaCompra() {
   }
 
   return (
-    <Estrutura titulo="Nova compra" voltar={passo > 1 ? undefined : "/lancar/"}>
+    <Estrutura titulo={edicao ? "Editar compra" : "Nova compra"} voltar={edicao ? "/compras/" : passo > 1 ? undefined : "/lancar/"}>
       <Passos atual={passo} total={3} />
 
       {passo === 1 ? (
@@ -177,9 +210,15 @@ function NovaCompra() {
             </button>
           </Cartao>
           <Cartao className="space-y-5">
-            <Rotulo grupo texto="Pagamento">
-              <EscolherPagamento valor={pagamento} aoMudar={setPagamento} data={data} />
-            </Rotulo>
+            {edicao ? (
+              <Rotulo texto="Vencimento da conta" ajuda="Pagamentos já lançados continuam valendo; a conta passa ao novo total.">
+                <input type="date" className={classeEntrada} value={vencimento} onChange={(e) => setVencimento(e.target.value || data)} />
+              </Rotulo>
+            ) : (
+              <Rotulo grupo texto="Pagamento">
+                <EscolherPagamento valor={pagamento} aoMudar={setPagamento} data={data} />
+              </Rotulo>
+            )}
             <Rotulo texto="Data da compra">
               <input type="date" className={classeEntrada} value={data} max={hoje()} onChange={(e) => setData(e.target.value || hoje())} />
             </Rotulo>
@@ -216,21 +255,23 @@ function NovaCompra() {
             onClick={async () => {
               if (origem === "retorno" && !viagemId) return setErro("Escolha a viagem da compra de volta.");
               setErro(null);
+              const entrada = { data, fornecedor, origem, viagem_id: viagemId, observacao: observacao.trim() || null, itens };
               await salvarVarios(
-                montarCompra({
-                  data,
-                  fornecedor,
-                  origem,
-                  viagem_id: viagemId,
-                  observacao: observacao.trim() || null,
-                  itens,
-                  pagamento,
-                }),
+                edicao
+                  ? montarEdicaoCompra({
+                      compra: edicao.compra,
+                      titulo: edicao.titulo,
+                      itensAntigos: edicao.itens,
+                      movimentosAntigos: edicao.movs,
+                      entrada,
+                      vencimento,
+                    })
+                  : montarCompra({ ...entrada, pagamento }),
               );
               setSalva({ total, nome: String(fornecedor.nome) });
             }}
           >
-            Salvar compra
+            {edicao ? "Salvar alterações" : "Salvar compra"}
           </Botao>
           <Botao variante="secundario" onClick={() => setPasso(2)}>
             Voltar

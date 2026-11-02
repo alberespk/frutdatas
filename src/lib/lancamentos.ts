@@ -85,9 +85,9 @@ export function totalItens(itens: { quantidade: number; preco_unitario: number }
   return arred2(itens.reduce((s, i) => s + arred2(i.quantidade * i.preco_unitario), 0));
 }
 
-export function montarCompra(e: EntradaCompra): Gravacao[] {
+export function montarCompra(e: EntradaCompra, ids?: { compra: string; titulo?: string }): Gravacao[] {
   if (!e.itens.length) throw new Error("A compra precisa de pelo menos um item.");
-  const compraId = novoId();
+  const compraId = ids?.compra ?? novoId();
   const g: Gravacao[] = [
     {
       tabela: "compras",
@@ -131,7 +131,7 @@ export function montarCompra(e: EntradaCompra): Gravacao[] {
   }
   const total = totalItens(e.itens);
   const titulo: Partial<Registro> = {
-    id: novoId(),
+    id: ids?.titulo ?? novoId(),
     tipo: "pagar",
     origem_tabela: "compras",
     origem_id: compraId,
@@ -147,6 +147,27 @@ export function montarCompra(e: EntradaCompra): Gravacao[] {
     g.push(...montarPagamento({ titulo: titulo as Registro, valor: total, forma: e.pagamento.forma, data: e.data }));
   }
   return g;
+}
+
+/**
+ * Edição de compra: mantém a compra e a conta (com os pagamentos já feitos),
+ * troca os itens e os movimentos de estoque, e ajusta valor e vencimento da conta.
+ */
+export function montarEdicaoCompra(p: {
+  compra: Registro;
+  titulo: Registro | undefined;
+  itensAntigos: Registro[];
+  movimentosAntigos: Registro[];
+  entrada: Omit<EntradaCompra, "pagamento">;
+  vencimento: string;
+}): Gravacao[] {
+  return [
+    ...montarCancelamento([
+      { tabela: "movimentos_estoque", lista: p.movimentosAntigos },
+      { tabela: "compra_itens", lista: p.itensAntigos },
+    ]),
+    ...montarCompra({ ...p.entrada, pagamento: { tipo: "depois", vencimento: p.vencimento } }, { compra: p.compra.id, titulo: p.titulo?.id }),
+  ];
 }
 
 /**

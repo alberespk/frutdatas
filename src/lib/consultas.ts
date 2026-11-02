@@ -46,11 +46,15 @@ export async function ultimoPreco(fornecedorId: string, produtoId: string, class
 }
 
 /** Estoque calculado a partir de todos os movimentos do aparelho. */
-export function useEstoque(dataHoje: string) {
+export function useEstoque(dataHoje: string, ignorarOrigens: string[] = []) {
+  const chave = ignorarOrigens.join(",");
   return useLiveQuery(async () => {
     const { calcularEstoque } = await import("./estoque");
-    return calcularEstoque(await db.t("movimentos_estoque").toArray(), dataHoje);
-  }, [dataHoje]);
+    const ignorar = new Set(ignorarOrigens);
+    const movs = (await db.t("movimentos_estoque").toArray()).filter((m) => !ignorar.has(String(m.origem_id)));
+    return calcularEstoque(movs, dataHoje);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dataHoje, chave]);
 }
 
 /** Último preço de venda de um produto (+ classificação), de preferência a este cliente. */

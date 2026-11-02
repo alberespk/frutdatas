@@ -186,6 +186,11 @@ function DetalheCompra({ id, aoVoltar }: { id: string; aoVoltar: () => void }) {
 
       {pagando && titulo ? <PagarTitulo titulo={titulo} baixas={baixas} aoFechar={() => setPagando(false)} /> : null}
       {!pagando && !cancelada && titulo && situacao !== "paga" ? <Botao onClick={() => setPagando(true)}>Registrar pagamento</Botao> : null}
+      {!pagando && podeCancelar ? (
+        <Link href={`/compras/nova/?editar=${compra.id}`} className="block">
+          <Botao variante="secundario">Editar compra</Botao>
+        </Link>
+      ) : null}
       <Botao variante="secundario" onClick={aoVoltar}>
         Voltar
       </Botao>

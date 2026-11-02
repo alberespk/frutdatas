@@ -1,6 +1,6 @@
 // Regras de venda, acerto (com devolução) e romaneio.
 import { formatarData, formatarMoeda, formatarNumero, somarDias } from "./formato";
-import { arred2, montarPagamento, type FormaPagamento, type Gravacao } from "./lancamentos";
+import { arred2, montarCancelamento, montarPagamento, type FormaPagamento, type Gravacao } from "./lancamentos";
 import { novoId } from "./repo";
 import type { Registro } from "./tabelas";
 
@@ -45,9 +45,9 @@ export function totalVenda(itens: { quantidade: number; preco_unitario: number }
   return arred2(itens.reduce((s, i) => s + arred2(i.quantidade * i.preco_unitario), 0));
 }
 
-export function montarVenda(e: EntradaVenda): Gravacao[] {
+export function montarVenda(e: EntradaVenda, ids?: { venda: string; titulo?: string }): Gravacao[] {
   if (!e.itens.length) throw new Error("A venda precisa de pelo menos um item.");
-  const vendaId = novoId();
+  const vendaId = ids?.venda ?? novoId();
   const vencimento = somarDias(e.data, e.prazo_dias);
   const g: Gravacao[] = [
     {
@@ -95,7 +95,7 @@ export function montarVenda(e: EntradaVenda): Gravacao[] {
   }
   const total = totalVenda(e.itens);
   const titulo: Partial<Registro> = {
-    id: novoId(),
+    id: ids?.titulo ?? novoId(),
     tipo: "receber",
     origem_tabela: "vendas",
     origem_id: vendaId,
@@ -257,4 +257,28 @@ export function montarDesfazerAcerto(p: {
     });
   }
   return g;
+}
+
+/**
+ * Edição de venda (só antes do acerto): mantém a venda, o número e a conta
+ * (com recebimentos já feitos); troca itens e saídas de estoque.
+ */
+export function montarEdicaoVenda(p: {
+  venda: Registro;
+  titulo: Registro | undefined;
+  itensAntigos: Registro[];
+  movimentosAntigos: Registro[];
+  entrada: Omit<EntradaVenda, "recebimento" | "numero">;
+}): Gravacao[] {
+  if (p.venda.situacao === "acertada") throw new Error("Desfaça o acerto antes de editar a venda.");
+  return [
+    ...montarCancelamento([
+      { tabela: "movimentos_estoque", lista: p.movimentosAntigos },
+      { tabela: "venda_itens", lista: p.itensAntigos },
+    ]),
+    ...montarVenda(
+      { ...p.entrada, numero: String(p.venda.numero), recebimento: { tipo: "prazo" } },
+      { venda: p.venda.id, titulo: p.titulo?.id },
+    ),
+  ];
 }

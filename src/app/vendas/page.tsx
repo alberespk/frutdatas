@@ -307,6 +307,11 @@ function DetalheVenda({ id, aoVoltar }: { id: string; aoVoltar: () => void }) {
         <PagarTitulo titulo={titulo} baixas={baixas} aoFechar={() => setModo("ver")} />
       ) : null}
       {modo === "ver" && !cancelada && !acertada ? <Botao onClick={() => setModo("acerto")}>Fazer acerto</Botao> : null}
+      {modo === "ver" && !cancelada && !acertada ? (
+        <Link href={`/vendas/nova/?editar=${venda.id}`} className="block">
+          <Botao variante="secundario">Editar venda</Botao>
+        </Link>
+      ) : null}
       {modo === "ver" && !cancelada && titulo && falta > 0.005 ? (
         <Botao variante={acertada ? "primario" : "secundario"} onClick={() => setModo("receber")}>
           Registrar recebimento
