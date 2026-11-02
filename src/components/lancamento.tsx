@@ -184,14 +184,16 @@ export function EscolherPagamento({
 
 export { FORMAS };
 
-export function Selo({ situacao }: { situacao: "paga" | "parcial" | "pendente" | "vencida" }) {
+export function Selo({ situacao, receber }: { situacao: "paga" | "parcial" | "pendente" | "vencida"; receber?: boolean }) {
   const cores = {
     paga: "bg-folha/30 text-serra",
     parcial: "bg-maracuja/25 text-tinta",
     pendente: "bg-borda text-tinta",
     vencida: "bg-morango/15 text-morango",
   };
-  const textos = { paga: "Pago", parcial: "Parcial", pendente: "A pagar", vencida: "Vencido" };
+  const textos = receber
+    ? { paga: "Recebido", parcial: "Parcial", pendente: "A receber", vencida: "Vencido" }
+    : { paga: "Pago", parcial: "Parcial", pendente: "A pagar", vencida: "Vencido" };
   return <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-bold ${cores[situacao]}`}>{textos[situacao]}</span>;
 }
 
