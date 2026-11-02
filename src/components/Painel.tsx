@@ -24,9 +24,6 @@ export function Painel() {
   const vendaItens = useTabela("venda_itens");
   const movimentos = useTabela("movimentos_estoque");
   const despesas = useTabela("despesas");
-  const titulos = useTabela("titulos");
-  const baixas = useTabela("baixas");
-  const caixa = useTabela("movimentos_caixa");
   const fornecedores = useMapa("fornecedores");
   const clientes = useMapa("clientes");
   const estoque = useEstoque(d);
@@ -38,14 +35,6 @@ export function Painel() {
         : null,
     [compras, compraItens, vendas, vendaItens, movimentos, despesas, de, d],
   );
-  const contas = useMemo(() => {
-    if (!titulos || !baixas) return null;
-    const soma = (tipo: "pagar" | "receber") => {
-      const gs = agruparPorPessoa(titulos, baixas, tipo, d, () => "");
-      return { aberto: arred2(gs.reduce((s, g) => s + g.aberto, 0)), vencido: arred2(gs.reduce((s, g) => s + g.vencido, 0)) };
-    };
-    return { pagar: soma("pagar"), receber: soma("receber") };
-  }, [titulos, baixas, d]);
   const valorEstoque = [...(estoque?.values() ?? [])].reduce((s, x) => s + x.valor, 0);
 
   return (
@@ -73,25 +62,9 @@ export function Painel() {
           href="/financeiro/?aba=margens"
           alerta={!!r && r.margem < 0}
         />
-        <Numero rotulo="Perdas" valor={r?.perdas} detalhe={r ? `Despesas ${formatarMoeda(r.despesas)}` : ""} href="/estoque/" alerta={!!r && r.perdas > 0} />
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <Numero
-          rotulo="A receber"
-          valor={contas?.receber.aberto}
-          detalhe={contas ? `Vencido ${formatarMoeda(contas.receber.vencido)}` : ""}
-          href="/financeiro/?aba=receber"
-          alerta={!!contas && contas.receber.vencido > 0}
-        />
-        <Numero
-          rotulo="A pagar"
-          valor={contas?.pagar.aberto}
-          detalhe={contas ? `Vencido ${formatarMoeda(contas.pagar.vencido)}` : ""}
-          href="/financeiro/?aba=pagar"
-          alerta={!!contas && contas.pagar.vencido > 0}
-        />
-        <Numero rotulo="Saldo em caixa" valor={caixa ? saldoCaixa(caixa).total : undefined} detalhe="Pix + dinheiro" href="/financeiro/" />
-        <Numero rotulo="Estoque" valor={estoque ? valorEstoque : undefined} detalhe="pelo custo médio" href="/estoque/" />
+        <Numero rotulo="Perdas" valor={r?.perdas} detalhe="pelo custo" href="/estoque/" alerta={!!r && r.perdas > 0} />
+        <Numero rotulo="Despesas" valor={r?.despesas} detalhe="viagem, produção e gerais" href="/despesas/" />
+        <Numero rotulo="Estoque hoje" valor={estoque ? valorEstoque : undefined} detalhe="pelo custo médio" href="/estoque/" />
       </div>
       <Top titulo="Produtores que mais venderam para nós" lista={r?.produtores} nomes={fornecedores} />
       <Top titulo="Clientes que mais compraram" lista={r?.clientes} nomes={clientes} />
@@ -148,5 +121,49 @@ function Top({ titulo, lista, nomes }: { titulo: string; lista: Ranking[] | unde
         </ol>
       )}
     </Cartao>
+  );
+}
+
+/** Saldo, a receber e a pagar: em destaque no alto da tela inicial. */
+export function Destaques() {
+  const d = hoje();
+  const titulos = useTabela("titulos");
+  const baixas = useTabela("baixas");
+  const caixa = useTabela("movimentos_caixa");
+  const contas = useMemo(() => {
+    if (!titulos || !baixas) return null;
+    const soma = (tipo: "pagar" | "receber") => {
+      const gs = agruparPorPessoa(titulos, baixas, tipo, d, () => "");
+      return { aberto: arred2(gs.reduce((s, g) => s + g.aberto, 0)), vencido: arred2(gs.reduce((s, g) => s + g.vencido, 0)) };
+    };
+    return { pagar: soma("pagar"), receber: soma("receber") };
+  }, [titulos, baixas, d]);
+  const saldo = caixa ? saldoCaixa(caixa) : null;
+  return (
+    <div className="space-y-3">
+      <Link href="/financeiro/?aba=caixa" className="block rounded-2xl bg-serra p-4 text-white active:bg-serra-escuro">
+        <div className="text-sm opacity-80">Saldo da conta</div>
+        <div className="font-marca text-4xl font-bold">{saldo ? formatarMoeda(saldo.total) : "–"}</div>
+        <div className="text-sm opacity-80">
+          {saldo ? `Pix/conta ${formatarMoeda(saldo.porForma.pix)} · Dinheiro ${formatarMoeda(saldo.porForma.dinheiro)}` : ""}
+        </div>
+      </Link>
+      <div className="grid grid-cols-2 gap-3">
+        <Link href="/financeiro/?aba=receber" className="block rounded-2xl border-2 border-folha bg-white p-3 active:bg-fundo">
+          <div className="text-sm text-suave">A receber</div>
+          <div className="font-marca text-2xl font-bold text-serra">{contas ? formatarMoeda(contas.receber.aberto) : "–"}</div>
+          <div className={`text-xs ${contas?.receber.vencido ? "font-semibold text-morango" : "text-suave"}`}>
+            Vencido {contas ? formatarMoeda(contas.receber.vencido) : "–"}
+          </div>
+        </Link>
+        <Link href="/financeiro/?aba=pagar" className="block rounded-2xl border-2 border-morango/40 bg-white p-3 active:bg-fundo">
+          <div className="text-sm text-suave">A pagar</div>
+          <div className="font-marca text-2xl font-bold text-morango">{contas ? formatarMoeda(contas.pagar.aberto) : "–"}</div>
+          <div className={`text-xs ${contas?.pagar.vencido ? "font-semibold text-morango" : "text-suave"}`}>
+            Vencido {contas ? formatarMoeda(contas.pagar.vencido) : "–"}
+          </div>
+        </Link>
+      </div>
+    </div>
   );
 }

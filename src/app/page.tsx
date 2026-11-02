@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Estrutura } from "@/components/Estrutura";
 import { textoStatus, useStatusSync } from "@/components/StatusSync";
-import { Painel } from "@/components/Painel";
+import { Destaques, Painel } from "@/components/Painel";
 import { Cartao } from "@/components/ui";
 import { useEstoque, useMapa } from "@/lib/consultas";
 import { db } from "@/lib/db";
@@ -28,6 +28,7 @@ export default function Inicio() {
 
   return (
     <Estrutura titulo={`Olá, ${primeiroNome}!`}>
+      {ehSocio ? <Destaques /> : null}
       <p className="text-suave">Hoje é {formatarData(hoje())}.</p>
 
       <Cartao className="flex items-center justify-between gap-3">
