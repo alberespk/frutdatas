@@ -2,18 +2,16 @@
 import Link from "next/link";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Estrutura } from "@/components/Estrutura";
-import { textoStatus, useStatusSync } from "@/components/StatusSync";
 import { Destaques, Painel } from "@/components/Painel";
 import { Cartao } from "@/components/ui";
 import { useEstoque, useMapa } from "@/lib/consultas";
 import { db } from "@/lib/db";
 import { estaParado } from "@/lib/estoque";
-import { formatarData, formatarDataHora, hoje } from "@/lib/formato";
+import { formatarData, hoje } from "@/lib/formato";
 import { useSessao } from "@/lib/sessao";
 
 export default function Inicio() {
   const { perfil, ehSocio } = useSessao();
-  const sync = useStatusSync();
   const contagem = useLiveQuery(async () => {
     const conta = (t: "fornecedores" | "clientes" | "produtos") =>
       db.t(t).filter((r) => !r.cancelado_em && r.ativo !== false).count();
@@ -31,17 +29,6 @@ export default function Inicio() {
       {ehSocio ? <Destaques /> : null}
       <p className="text-suave">Hoje é {formatarData(hoje())}.</p>
 
-      <Cartao className="flex items-center justify-between gap-3">
-        <div>
-          <div className="font-semibold">{textoStatus(sync).texto}</div>
-          <div className="text-sm text-suave">
-            {sync.ultima ? `Última sincronização: ${formatarDataHora(sync.ultima)}` : "Ainda não sincronizou"}
-          </div>
-        </div>
-        <Link href="/sincronizacao/" className="font-semibold text-serra underline">
-          Detalhes
-        </Link>
-      </Cartao>
 
       {ehSocio && parados > 0 ? (
         <Link href="/estoque/" className="block rounded-2xl border-2 border-morango bg-white p-4">
