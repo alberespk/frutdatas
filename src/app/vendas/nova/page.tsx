@@ -1,7 +1,8 @@
 "use client";
 // Lançamento de venda em 3 passos: cliente → itens (do estoque) → prazo e recebimento.
 import Link from "next/link";
-import { useMemo, useRef, useState } from "react";
+import { Suspense, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Estrutura } from "@/components/Estrutura";
 import { EntradaNumero, EscolherDaLista, Opcoes, Passos } from "@/components/lancamento";
 import { Botao, Cartao, classeEntrada, Rotulo } from "@/components/ui";
@@ -16,7 +17,16 @@ import { montarVenda, proximoNumero, totalVenda, type ItemVenda } from "@/lib/ve
 type ItemTela = Omit<ItemVenda, "custo_unitario">;
 type Recebimento = "prazo" | FormaPagamento;
 
-export default function NovaVenda() {
+export default function Pagina() {
+  return (
+    <Suspense fallback={null}>
+      <NovaVenda />
+    </Suspense>
+  );
+}
+
+function NovaVenda() {
+  const viagemParam = useSearchParams().get("viagem");
   const { perfil, salvarVarios } = useSessao();
   const [passo, setPasso] = useState(1);
   const [cliente, setCliente] = useState<Registro | null>(null);
@@ -24,7 +34,7 @@ export default function NovaVenda() {
   const [data, setData] = useState(hoje());
   const [prazo, setPrazo] = useState<number | null>(0);
   const [recebimento, setRecebimento] = useState<Recebimento>("prazo");
-  const [viagemId, setViagemId] = useState<string | null>(null);
+  const [viagemId, setViagemId] = useState<string | null>(viagemParam);
   const [observacao, setObservacao] = useState("");
   const [salva, setSalva] = useState<{ id: string; numero: string; total: number } | null>(null);
   const [erro, setErro] = useState<string | null>(null);

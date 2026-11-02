@@ -28,15 +28,16 @@ export default function Pagina() {
 function NovaDespesa() {
   const params = useSearchParams();
   const cicloInicial = params.get("ciclo");
+  const viagemInicial = params.get("viagem");
   const { salvarVarios, ehSocio } = useSessao();
-  const [grupo, setGrupo] = useState<string>(cicloInicial ? "producao" : ehSocio ? "producao" : "viagem");
+  const [grupo, setGrupo] = useState<string>(cicloInicial ? "producao" : viagemInicial || !ehSocio ? "viagem" : "producao");
   const [categoria, setCategoria] = useState<Registro | null>(null);
   const [valor, setValor] = useState<number | null>(null);
   const [data, setData] = useState(hoje());
   const [descricao, setDescricao] = useState("");
   const [favorecido, setFavorecido] = useState("");
   const [cicloId, setCicloId] = useState<string | null>(cicloInicial);
-  const [viagemId, setViagemId] = useState<string | null>(null);
+  const [viagemId, setViagemId] = useState<string | null>(viagemInicial);
   const [motoristaId, setMotoristaId] = useState<string | null>(null);
   const [pagamento, setPagamento] = useState<Pagamento>({ tipo: "agora", forma: "dinheiro" });
   const [erro, setErro] = useState<string | null>(null);
@@ -60,15 +61,15 @@ function NovaDespesa() {
           <div className="font-marca text-2xl font-bold">{salva}</div>
         </Cartao>
         <Botao onClick={() => { setSalva(null); setValor(null); setDescricao(""); setCategoria(null); }}>Nova despesa</Botao>
-        <Link href={cicloInicial ? "/producao/" : "/despesas/"} className="block">
-          <Botao variante="secundario">{cicloInicial ? "Voltar à produção" : "Ver despesas"}</Botao>
+        <Link href={cicloInicial ? "/producao/" : viagemInicial ? `/viagens/?id=${viagemInicial}` : "/despesas/"} className="block">
+          <Botao variante="secundario">{cicloInicial ? "Voltar à produção" : viagemInicial ? "Voltar à viagem" : "Ver despesas"}</Botao>
         </Link>
       </Estrutura>
     );
   }
 
   return (
-    <Estrutura titulo="Nova despesa" voltar={cicloInicial ? "/producao/" : "/lancar/"}>
+    <Estrutura titulo="Nova despesa" voltar={cicloInicial ? "/producao/" : viagemInicial ? `/viagens/?id=${viagemInicial}` : "/lancar/"}>
       <Cartao className="space-y-5">
         <Rotulo grupo texto="Tipo de despesa">
           <Opcoes

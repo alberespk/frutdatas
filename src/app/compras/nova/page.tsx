@@ -1,7 +1,8 @@
 "use client";
 // Lançamento de compra em 3 passos: fornecedor → itens → pagamento.
 import Link from "next/link";
-import { useMemo, useRef, useState } from "react";
+import { Suspense, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Estrutura } from "@/components/Estrutura";
 import { EntradaNumero, EscolherDaLista, EscolherPagamento, Opcoes, Passos } from "@/components/lancamento";
 import { Botao, Cartao, classeEntrada, Rotulo } from "@/components/ui";
@@ -11,15 +12,24 @@ import { montarCompra, totalItens, type ItemCompra, type Pagamento } from "@/lib
 import { useSessao } from "@/lib/sessao";
 import type { Registro } from "@/lib/tabelas";
 
-export default function NovaCompra() {
+export default function Pagina() {
+  return (
+    <Suspense fallback={null}>
+      <NovaCompra />
+    </Suspense>
+  );
+}
+
+function NovaCompra() {
+  const viagemParam = useSearchParams().get("viagem");
   const { salvarVarios, salvar } = useSessao();
   const [passo, setPasso] = useState(1);
   const [fornecedor, setFornecedor] = useState<Registro | null>(null);
   const [itens, setItens] = useState<ItemCompra[]>([]);
   const [data, setData] = useState(hoje());
   const [pagamento, setPagamento] = useState<Pagamento>({ tipo: "agora", forma: "pix" });
-  const [origem, setOrigem] = useState<"regional" | "retorno">("regional");
-  const [viagemId, setViagemId] = useState<string | null>(null);
+  const [origem, setOrigem] = useState<"regional" | "retorno">(viagemParam ? "retorno" : "regional");
+  const [viagemId, setViagemId] = useState<string | null>(viagemParam);
   const [observacao, setObservacao] = useState("");
   const [salva, setSalva] = useState<{ total: number; nome: string } | null>(null);
   const [erro, setErro] = useState<string | null>(null);
