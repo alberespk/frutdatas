@@ -39,6 +39,12 @@ export class BancoLocal extends Dexie {
       baixas: "&id, atualizado_em, sincronizado_em, titulo_id, movimento_id",
       movimentos_estoque: "&id, atualizado_em, sincronizado_em, origem_id, produto_id",
     });
+    // v3: vendas e viagens.
+    this.version(3).stores({
+      compras: "&id, atualizado_em, sincronizado_em, data, fornecedor_id, viagem_id",
+      vendas: "&id, atualizado_em, sincronizado_em, data, cliente_id, viagem_id",
+      venda_itens: "&id, atualizado_em, sincronizado_em, venda_id, produto_id",
+    });
   }
 
   t(tabela: NomeTabela): Table<Registro, string> {

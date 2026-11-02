@@ -52,3 +52,25 @@ export function useEstoque(dataHoje: string) {
     return calcularEstoque(await db.t("movimentos_estoque").toArray(), dataHoje);
   }, [dataHoje]);
 }
+
+/** Último preço de venda de um produto (+ classificação), de preferência a este cliente. */
+export async function ultimoPrecoVenda(clienteId: string, produtoId: string, classificacaoId: string | null) {
+  const itens = (await db.t("venda_itens").where("produto_id").equals(produtoId).toArray()).filter(
+    (i) => !i.cancelado_em && (classificacaoId ? i.classificacao_id === classificacaoId : true),
+  );
+  if (!itens.length) return null;
+  const vendas = new Map(
+    (await db.t("vendas").bulkGet([...new Set(itens.map((i) => String(i.venda_id)))]))
+      .filter((v): v is Registro => !!v && !v.cancelado_em)
+      .map((v) => [v.id, v]),
+  );
+  const comData = itens
+    .map((i) => ({ i, v: vendas.get(String(i.venda_id)) }))
+    .filter((x) => x.v)
+    .sort((a, b) => `${b.v!.data}${b.i.criado_em}`.localeCompare(`${a.v!.data}${a.i.criado_em}`));
+  const doCliente = comData.find((x) => x.v!.cliente_id === clienteId);
+  const escolhido = doCliente ?? comData[0];
+  return escolhido
+    ? { preco: Number(escolhido.i.preco_acerto ?? escolhido.i.preco_unitario), data: String(escolhido.v!.data), doCliente: !!doCliente }
+    : null;
+}

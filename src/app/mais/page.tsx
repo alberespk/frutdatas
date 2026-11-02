@@ -30,6 +30,7 @@ export default function Mais() {
         </div>
       </Cartao>
       <div className="overflow-hidden rounded-2xl border border-borda">
+        {ehSocio ? <ItemLista href="/vendas/" titulo="Vendas" detalhe="Romaneios, acertos e recebimentos" /> : null}
         <ItemLista href="/compras/" titulo="Compras" detalhe={ehSocio ? "Compras de produtores e de retorno" : "As compras que você lançou"} />
         <ItemLista href="/producao/" titulo="Produção própria" detalhe="Ciclos, despesas, colheitas e custo por kg" />
         <ItemLista href="/despesas/" titulo="Despesas" detalhe={ehSocio ? "Todas as despesas" : "As despesas que você lançou"} />
