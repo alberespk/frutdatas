@@ -17,7 +17,7 @@ estoque, vendas com romaneio, viagens e financeiro. Feito para o celular e para 
 | 4 | Vendas, acerto com devolução, romaneio em PDF e WhatsApp | ✅ |
 | 5 | Viagens/fretes (carga de ida, despesas, carga de volta, diárias, resultado e custo por km) | ✅ |
 | 6 | Financeiro (a pagar/receber por pessoa, quitação de várias contas, caixa, retiradas, margens, Excel e PDF) | ✅ |
-| 7 | Painel | |
+| 7 | Painel (vendas, compras, margem, perdas, contas, caixa, estoque e rankings por período) | ✅ |
 
 ## Como rodar
 
