@@ -9,7 +9,7 @@ import { arred2 } from "@/lib/lancamentos";
 import { resumirPainel, type Ranking } from "@/lib/painel";
 import type { Registro } from "@/lib/tabelas";
 import { Opcoes } from "./lancamento";
-import { Cartao } from "./ui";
+import { Cartao, Esqueleto, Spinner } from "./ui";
 
 type Periodo = "hoje" | "semana" | "mes";
 
@@ -41,6 +41,11 @@ export function Painel() {
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-2">
         <h2 className="font-marca text-xl font-bold">Painel</h2>
+        {!r || !estoque ? (
+          <span role="status" className="flex items-center gap-2 text-sm text-suave">
+            <Spinner className="h-4 w-4 text-serra" /> Carregando dados…
+          </span>
+        ) : null}
       </div>
       <Opcoes
         colunas={3}
@@ -89,7 +94,7 @@ function Numero({
     <Link href={href} className="block rounded-2xl border border-borda bg-white p-3 active:bg-fundo">
       <div className="text-sm text-suave">{rotulo}</div>
       <div className={`font-marca text-xl font-bold ${alerta ? "text-morango" : "text-tinta"}`}>
-        {valor === undefined ? "–" : formatarMoeda(valor)}
+        {valor === undefined ? <Esqueleto className="h-6 w-24" /> : formatarMoeda(valor)}
       </div>
       <div className="truncate text-xs text-suave">{detalhe}</div>
     </Link>
@@ -101,7 +106,13 @@ function Top({ titulo, lista, nomes }: { titulo: string; lista: Ranking[] | unde
   return (
     <Cartao className="space-y-3">
       <h3 className="font-semibold">{titulo}</h3>
-      {!lista?.length ? (
+      {lista === undefined ? (
+        <div className="space-y-2">
+          <Esqueleto className="h-4 w-full text-suave" />
+          <Esqueleto className="h-4 w-3/4 text-suave" />
+          <Esqueleto className="h-4 w-1/2 text-suave" />
+        </div>
+      ) : !lista.length ? (
         <p className="text-sm text-suave">Nada no período.</p>
       ) : (
         <ol className="space-y-2">
@@ -143,7 +154,7 @@ export function Destaques() {
     <div className="space-y-3">
       <Link href="/financeiro/?aba=caixa" className="block rounded-2xl bg-serra p-4 text-white active:bg-serra-escuro">
         <div className="text-sm opacity-80">Saldo da conta</div>
-        <div className="font-marca text-4xl font-bold">{saldo ? formatarMoeda(saldo.total) : "–"}</div>
+        <div className="font-marca text-4xl font-bold">{saldo ? formatarMoeda(saldo.total) : <Esqueleto className="h-9 w-40" />}</div>
         <div className="text-sm opacity-80">
           {saldo ? `Pix/conta ${formatarMoeda(saldo.porForma.pix)} · Dinheiro ${formatarMoeda(saldo.porForma.dinheiro)}` : ""}
         </div>
@@ -151,16 +162,16 @@ export function Destaques() {
       <div className="grid grid-cols-2 gap-3">
         <Link href="/financeiro/?aba=receber" className="block rounded-2xl border-2 border-folha bg-white p-3 active:bg-fundo">
           <div className="text-sm text-suave">A receber</div>
-          <div className="font-marca text-2xl font-bold text-serra">{contas ? formatarMoeda(contas.receber.aberto) : "–"}</div>
+          <div className="font-marca text-2xl font-bold text-serra">{contas ? formatarMoeda(contas.receber.aberto) : <Esqueleto className="h-7 w-24" />}</div>
           <div className={`text-xs ${contas?.receber.vencido ? "font-semibold text-morango" : "text-suave"}`}>
-            Vencido {contas ? formatarMoeda(contas.receber.vencido) : "–"}
+            Vencido {contas ? formatarMoeda(contas.receber.vencido) : <Esqueleto className="h-3 w-12" />}
           </div>
         </Link>
         <Link href="/financeiro/?aba=pagar" className="block rounded-2xl border-2 border-morango/40 bg-white p-3 active:bg-fundo">
           <div className="text-sm text-suave">A pagar</div>
-          <div className="font-marca text-2xl font-bold text-morango">{contas ? formatarMoeda(contas.pagar.aberto) : "–"}</div>
+          <div className="font-marca text-2xl font-bold text-morango">{contas ? formatarMoeda(contas.pagar.aberto) : <Esqueleto className="h-7 w-24" />}</div>
           <div className={`text-xs ${contas?.pagar.vencido ? "font-semibold text-morango" : "text-suave"}`}>
-            Vencido {contas ? formatarMoeda(contas.pagar.vencido) : "–"}
+            Vencido {contas ? formatarMoeda(contas.pagar.vencido) : <Esqueleto className="h-3 w-12" />}
           </div>
         </Link>
       </div>

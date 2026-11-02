@@ -6,7 +6,7 @@ import { Suspense, useMemo, useState } from "react";
 import { Estrutura } from "@/components/Estrutura";
 import { EntradaNumero, Opcoes, Selo } from "@/components/lancamento";
 import { PagarTitulo } from "@/components/PagarTitulo";
-import { Botao, Cartao, classeEntrada, Rotulo, Vazio } from "@/components/ui";
+import { Botao, Cartao, classeEntrada, Rotulo, Vazio, Carregando } from "@/components/ui";
 import { useMapa, useTabela } from "@/lib/consultas";
 import { db } from "@/lib/db";
 import { formatarData, formatarDataHora, formatarMoeda, formatarNumero, hoje, normalizar } from "@/lib/formato";
@@ -95,7 +95,7 @@ function Vendas() {
         aoMudar={setFiltro}
       />
       {vendas === undefined ? (
-        <Vazio>Carregando…</Vazio>
+        <Carregando />
       ) : !linhas.length ? (
         <Vazio>Nenhuma venda encontrada.</Vazio>
       ) : (
@@ -158,7 +158,7 @@ function DetalheVenda({ id, aoVoltar }: { id: string; aoVoltar: () => void }) {
     return { venda, itens, titulos, baixas, movCaixa, movEstoque, cliente, viagem, produtos, classes, motivo };
   }, [id]);
 
-  if (dados === undefined) return <Vazio>Carregando…</Vazio>;
+  if (dados === undefined) return <Carregando />;
   if (!dados) return <Vazio>Venda não encontrada.</Vazio>;
   const { venda, itens, titulos, baixas, cliente, produtos, classes } = dados;
   const titulo = titulos[0];

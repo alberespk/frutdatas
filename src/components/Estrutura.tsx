@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
+import { Spinner } from "./ui";
 import { useSessao } from "@/lib/sessao";
 import { StatusSync } from "./StatusSync";
 
@@ -40,7 +41,12 @@ export function Estrutura({
   }, [carregando, perfil, router]);
 
   if (carregando || !perfil) {
-    return <div className="flex min-h-dvh items-center justify-center text-suave">Carregando…</div>;
+    return (
+      <div role="status" className="flex min-h-dvh flex-col items-center justify-center gap-3 text-suave">
+        <Spinner className="h-8 w-8 text-serra" />
+        <span>Carregando…</span>
+      </div>
+    );
   }
 
   const abas = ehSocio ? ABAS_SOCIO : ABAS_CAMPO;

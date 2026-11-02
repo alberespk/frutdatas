@@ -4,7 +4,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useMemo, useState } from "react";
 import { Estrutura } from "@/components/Estrutura";
 import { EntradaNumero, Opcoes } from "@/components/lancamento";
-import { Botao, Cartao, classeEntrada, Rotulo, Vazio } from "@/components/ui";
+import { Botao, Cartao, classeEntrada, Rotulo, Vazio, Carregando } from "@/components/ui";
 import { useEstoque, useMapa } from "@/lib/consultas";
 import { db } from "@/lib/db";
 import { custoDeSaida, estaParado, ordenarMovimentos, ROTULO_TIPO, type Saldo } from "@/lib/estoque";
@@ -80,7 +80,7 @@ export default function Estoque() {
         aoMudar={setFiltro}
       />
       {estoque === undefined ? (
-        <Vazio>Carregando…</Vazio>
+        <Carregando />
       ) : !linhas.length ? (
         <Vazio>{filtro === "parados" ? "Nenhum produto parado. 👍" : "Estoque vazio. As compras e colheitas entram aqui."}</Vazio>
       ) : (

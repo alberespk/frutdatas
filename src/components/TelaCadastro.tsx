@@ -8,7 +8,7 @@ import { linkWhatsApp, normalizar } from "@/lib/formato";
 import { useSessao } from "@/lib/sessao";
 import type { NomeTabela, Registro } from "@/lib/tabelas";
 import { CampoFormulario } from "./CampoFormulario";
-import { Botao, Cartao, ItemLista, Vazio, classeEntrada } from "./ui";
+import { Botao, Cartao, ItemLista, Vazio, classeEntrada, Carregando } from "./ui";
 
 export function TelaCadastro({ cadastro }: { cadastro: Cadastro }) {
   const { ehSocio } = useSessao();
@@ -74,7 +74,7 @@ export function TelaCadastro({ cadastro }: { cadastro: Cadastro }) {
         onChange={(e) => setBusca(e.target.value)}
       />
       {registros === undefined ? (
-        <Vazio>Carregando…</Vazio>
+        <Carregando />
       ) : lista.length === 0 ? (
         <Vazio>{busca ? "Nada encontrado." : `Nenhum ${cadastro.singular} cadastrado ainda.`}</Vazio>
       ) : (

@@ -2,7 +2,7 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { useState } from "react";
 import { Estrutura } from "@/components/Estrutura";
-import { Botao, Cartao, classeEntrada, ItemLista, Rotulo, Vazio } from "@/components/ui";
+import { Botao, Cartao, classeEntrada, ItemLista, Rotulo, Vazio, Carregando } from "@/components/ui";
 import { db } from "@/lib/db";
 import { useSessao } from "@/lib/sessao";
 import type { Registro } from "@/lib/tabelas";
@@ -17,7 +17,9 @@ export default function Usuarios() {
         <EditarUsuario usuario={editando} lista={usuarios ?? []} aoFechar={() => setEditando(null)} />
       ) : (
         <>
-          {!usuarios?.length ? (
+          {usuarios === undefined ? (
+            <Carregando />
+          ) : !usuarios.length ? (
             <Vazio>Nenhum usuário sincronizado ainda.</Vazio>
           ) : (
             <div className="overflow-hidden rounded-2xl border border-borda">

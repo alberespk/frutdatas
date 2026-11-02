@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { Estrutura } from "@/components/Estrutura";
 import { Opcoes } from "@/components/lancamento";
-import { Botao, Cartao, classeEntrada, Rotulo, Vazio } from "@/components/ui";
+import { Botao, Cartao, classeEntrada, Rotulo, Vazio, Carregando } from "@/components/ui";
 import { ativos, ordenarPorNome, useMapa, useTabela } from "@/lib/consultas";
 import { formatarData, formatarMoeda, formatarNumero, hoje } from "@/lib/formato";
 import { montarCancelamento } from "@/lib/lancamentos";
@@ -40,7 +40,7 @@ export default function Producao() {
     <Estrutura titulo="Produção própria" voltar="/mais/">
       {novo ? <NovoCiclo aoFechar={() => setNovo(false)} /> : ehSocio ? <Botao onClick={() => setNovo(true)}>+ Novo ciclo / plantio</Botao> : null}
       {ciclos === undefined ? (
-        <Vazio>Carregando…</Vazio>
+        <Carregando />
       ) : !lista.length ? (
         <Vazio>Nenhum ciclo ativo. Cadastre as áreas em Mais → Cadastros → Áreas e depois crie um ciclo.</Vazio>
       ) : (

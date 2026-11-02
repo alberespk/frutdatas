@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { Estrutura } from "@/components/Estrutura";
 import { Selo } from "@/components/lancamento";
-import { Botao, Vazio } from "@/components/ui";
+import { Botao, Carregando, Vazio } from "@/components/ui";
 import { useMapa, useTabela } from "@/lib/consultas";
 import { formatarData, formatarMoeda, hoje } from "@/lib/formato";
 import { situacaoTitulo } from "@/lib/lancamentos";
@@ -22,7 +22,9 @@ export default function Despesas() {
       <Link href="/despesas/nova/" className="block">
         <Botao>+ Nova despesa</Botao>
       </Link>
-      {!lista.length ? (
+      {despesas === undefined ? (
+        <Carregando />
+      ) : !lista.length ? (
         <Vazio>Nenhuma despesa lançada.</Vazio>
       ) : (
         <div className="overflow-hidden rounded-2xl border border-borda">
