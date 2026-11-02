@@ -1,7 +1,7 @@
 "use client";
 // Lançamento de venda em 3 passos: cliente → itens (do estoque) → prazo e recebimento.
 import Link from "next/link";
-import { Suspense, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Estrutura } from "@/components/Estrutura";
 import { EntradaNumero, EscolherDaLista, Opcoes, Passos } from "@/components/lancamento";
@@ -12,7 +12,8 @@ import { formatarData, formatarMoeda, formatarNumero, hoje, somarDias } from "@/
 import type { FormaPagamento } from "@/lib/lancamentos";
 import { useSessao } from "@/lib/sessao";
 import type { Registro } from "@/lib/tabelas";
-import { montarVenda, proximoNumero, totalVenda, type ItemVenda } from "@/lib/vendas";
+import { montarEdicaoVenda, montarVenda, proximoNumero, totalVenda, type ItemVenda } from "@/lib/vendas";
+import { db } from "@/lib/db";
 
 type ItemTela = Omit<ItemVenda, "custo_unitario">;
 type Recebimento = "prazo" | FormaPagamento;
@@ -26,8 +27,12 @@ export default function Pagina() {
 }
 
 function NovaVenda() {
-  const viagemParam = useSearchParams().get("viagem");
+  const params = useSearchParams();
+  const viagemParam = params.get("viagem");
+  const editarId = params.get("editar");
   const { perfil, salvarVarios } = useSessao();
+  const [edicao, setEdicao] = useState<{ venda: Registro; titulo?: Registro; itens: Registro[]; movs: Registro[] } | null>(null);
+  const [aviso, setAviso] = useState<string | null>(null);
   const [passo, setPasso] = useState(1);
   const [cliente, setCliente] = useState<Registro | null>(null);
   const [itens, setItens] = useState<ItemTela[]>([]);
@@ -45,7 +50,38 @@ function NovaVenda() {
   const produtos = useTabela("produtos", ativos);
   const classificacoes = useTabela("classificacoes", ativos);
   const viagens = useTabela("viagens", (v) => v.situacao !== "encerrada");
-  const estoque = useEstoque(hoje());
+  // Na edição, o estoque é calculado como se esta venda ainda não tivesse saído.
+  const estoque = useEstoque(hoje(), edicao?.itens.map((i) => i.id) ?? []);
+
+  useEffect(() => {
+    if (!editarId) return;
+    let vivo = true;
+    (async () => {
+      const venda = await db.t("vendas").get(editarId);
+      if (!venda || venda.cancelado_em || !vivo) return;
+      if (venda.situacao === "acertada") {
+        setAviso("Esta venda já foi acertada. Para editar, abra a venda e toque em Desfazer acerto.");
+        return;
+      }
+      const itensV = (await db.t("venda_itens").where("venda_id").equals(editarId).toArray()).filter((i) => !i.cancelado_em);
+      const movs = (await db.t("movimentos_estoque").where("origem_id").anyOf(itensV.map((i) => i.id)).toArray()).filter((m) => !m.cancelado_em);
+      const titulo = (await db.t("titulos").where("origem_id").equals(editarId).toArray()).find((t) => !t.cancelado_em);
+      const cli = await db.t("clientes").get(String(venda.cliente_id));
+      if (!vivo) return;
+      setEdicao({ venda, titulo, itens: itensV, movs });
+      setCliente(cli ?? null);
+      setItens(itensV.map((i) => ({ produto_id: String(i.produto_id), classificacao_id: (i.classificacao_id as string) ?? null, quantidade: Number(i.quantidade), preco_unitario: Number(i.preco_unitario) })));
+      setData(String(venda.data));
+      setPrazo(Number(venda.prazo_dias ?? 0));
+      setRecebimento("prazo");
+      setViagemId((venda.viagem_id as string) ?? null);
+      setObservacao(String(venda.observacao ?? ""));
+      setPasso(2);
+    })();
+    return () => {
+      vivo = false;
+    };
+  }, [editarId]);
 
   // Clientes com venda mais recente aparecem primeiro.
   const ordenados = useMemo(() => {
@@ -81,6 +117,19 @@ function NovaVenda() {
       jaSaiu.set(chave, antes + i.quantidade);
       return { ...i, custo_unitario: (totalDepois - totalAntes) / i.quantidade };
     });
+    if (edicao) {
+      await salvarVarios(
+        montarEdicaoVenda({
+          venda: edicao.venda,
+          titulo: edicao.titulo,
+          itensAntigos: edicao.itens,
+          movimentosAntigos: edicao.movs,
+          entrada: { data, cliente: cliente!, viagem_id: viagemId, prazo_dias: prazo, observacao: observacao.trim() || null, itens: comCusto },
+        }),
+      );
+      setSalva({ id: edicao.venda.id, numero: String(edicao.venda.numero), total });
+      return;
+    }
     const numero = proximoNumero(perfil.letra, (todasVendas ?? []).map((v) => String(v.numero)));
     const g = montarVenda({
       numero,
@@ -98,13 +147,15 @@ function NovaVenda() {
 
   if (salva) {
     return (
-      <Estrutura titulo="Venda registrada">
+      <Estrutura titulo={edicao ? "Venda alterada" : "Venda registrada"}>
         <Cartao className="space-y-2 text-center">
           <div className="text-5xl">✅</div>
           <div className="text-suave">Romaneio {salva.numero}</div>
           <div className="font-marca text-2xl font-bold">{formatarMoeda(salva.total)}</div>
           <div className="text-suave">{String(cliente?.nome ?? "")}</div>
-          <div className="text-sm text-suave">Já saiu do estoque e entrou em contas a receber.</div>
+          <div className="text-sm text-suave">
+            {edicao ? "Estoque e conta a receber atualizados. Recebimentos já lançados continuam valendo." : "Já saiu do estoque e entrou em contas a receber."}
+          </div>
         </Cartao>
         <Link href={`/vendas/?id=${salva.id}`} className="block">
           <Botao>Abrir venda e enviar romaneio</Botao>
@@ -113,6 +164,7 @@ function NovaVenda() {
           variante="secundario"
           onClick={() => {
             setSalva(null);
+            setEdicao(null);
             setCliente(null);
             setItens([]);
             setObservacao("");
@@ -126,7 +178,12 @@ function NovaVenda() {
   }
 
   return (
-    <Estrutura titulo="Nova venda" voltar={passo > 1 ? undefined : "/lancar/"} apenasSocio>
+    <Estrutura
+      titulo={edicao ? `Editar venda ${edicao.venda.numero}` : "Nova venda"}
+      voltar={edicao ? `/vendas/?id=${edicao.venda.id}` : aviso ? "/vendas/" : passo > 1 ? undefined : "/lancar/"}
+      apenasSocio
+    >
+      {aviso ? <Cartao className="border-maracuja bg-maracuja/10">{aviso}</Cartao> : null}
       <Passos atual={passo} total={3} />
 
       {passo === 1 ? (
@@ -219,6 +276,9 @@ function NovaVenda() {
             </button>
           </Cartao>
           <Cartao className="space-y-5">
+            {edicao ? (
+              <p className="text-sm text-suave">Recebimentos já lançados continuam valendo; a conta passa ao novo total.</p>
+            ) : (
             <Rotulo grupo texto="Recebimento">
               <Opcoes
                 colunas={3}
@@ -231,6 +291,7 @@ function NovaVenda() {
                 aoMudar={setRecebimento}
               />
             </Rotulo>
+            )}
             {recebimento === "prazo" ? (
               <Rotulo
                 texto="Prazo para acerto (dias)"
@@ -259,7 +320,7 @@ function NovaVenda() {
             </Rotulo>
             {erro ? <p className="font-semibold text-morango">{erro}</p> : null}
           </Cartao>
-          <Botao onClick={salvarVenda}>Salvar venda</Botao>
+          <Botao onClick={salvarVenda}>{edicao ? "Salvar alterações" : "Salvar venda"}</Botao>
           <Botao variante="secundario" onClick={() => setPasso(2)}>
             Voltar
           </Botao>
