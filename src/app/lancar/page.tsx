@@ -9,7 +9,7 @@ const LANCAMENTOS = [
   { rotulo: "Despesa", icone: "⛽", href: "/despesas/nova/", campo: true },
   { rotulo: "Venda", icone: "🧾", href: "/vendas/nova/", campo: false },
   { rotulo: "Perda", icone: "🗑️", href: "/estoque/perda/", campo: true },
-  { rotulo: "Pagamento", icone: "💸", etapa: 6, campo: false },
+  { rotulo: "Pagamento", icone: "💸", href: "/financeiro/?aba=pagar", campo: false },
 ];
 
 export default function Lancar() {
@@ -22,19 +22,14 @@ export default function Lancar() {
             <>
               <span className="text-5xl">{l.icone}</span>
               <span className="font-marca text-2xl font-bold">{l.rotulo}</span>
-              {l.etapa ? <span className="rounded-full bg-maracuja/20 px-2 text-xs font-semibold">Etapa {l.etapa}</span> : null}
             </>
           );
           const classe =
             "flex aspect-square flex-col items-center justify-center gap-2 rounded-3xl border-2 bg-white text-center";
-          return l.href ? (
+          return (
             <Link key={l.rotulo} href={l.href} className={`${classe} border-serra active:bg-fundo`}>
               {conteudo}
             </Link>
-          ) : (
-            <div key={l.rotulo} className={`${classe} border-borda opacity-60`}>
-              {conteudo}
-            </div>
           );
         })}
       </div>
