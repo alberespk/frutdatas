@@ -1,0 +1,15 @@
+# Cabeçalhos do Amplify: o service worker e o manifesto nunca ficam presos em cache,
+# senão o celular demoraria a receber versões novas do app.
+customHeaders:
+  - pattern: "/sw.js"
+    headers:
+      - key: Cache-Control
+        value: no-cache
+  - pattern: "/manifest.webmanifest"
+    headers:
+      - key: Cache-Control
+        value: no-cache
+  - pattern: "/_next/static/**/*"
+    headers:
+      - key: Cache-Control
+        value: public, max-age=31536000, immutable

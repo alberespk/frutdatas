@@ -4,7 +4,9 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { Estrutura } from "@/components/Estrutura";
 import { textoStatus, useStatusSync } from "@/components/StatusSync";
 import { Cartao, EmBreve } from "@/components/ui";
+import { useEstoque, useMapa } from "@/lib/consultas";
 import { db } from "@/lib/db";
+import { estaParado } from "@/lib/estoque";
 import { formatarData, formatarDataHora, hoje } from "@/lib/formato";
 import { useSessao } from "@/lib/sessao";
 
@@ -17,6 +19,11 @@ export default function Inicio() {
     return { fornecedores: await conta("fornecedores"), clientes: await conta("clientes"), produtos: await conta("produtos") };
   }, []);
   const primeiroNome = perfil?.nome.split(" ")[0] ?? "";
+  const estoque = useEstoque(hoje());
+  const produtos = useMapa("produtos");
+  const parados = [...(estoque?.values() ?? [])].filter((s) =>
+    estaParado(s, Number(produtos?.get(s.produto_id)?.dias_alerta ?? 3)),
+  ).length;
 
   return (
     <Estrutura titulo={`Olá, ${primeiroNome}!`}>
@@ -33,6 +40,13 @@ export default function Inicio() {
           Detalhes
         </Link>
       </Cartao>
+
+      {ehSocio && parados > 0 ? (
+        <Link href="/estoque/" className="block rounded-2xl border-2 border-morango bg-white p-4">
+          <div className="font-semibold text-morango">⚠️ {parados} produto(s) parado(s) no estoque</div>
+          <div className="text-sm text-suave">Toque para ver e decidir: vender, baixar preço ou lançar perda.</div>
+        </Link>
+      ) : null}
 
       <div className="grid grid-cols-3 gap-3">
         {[

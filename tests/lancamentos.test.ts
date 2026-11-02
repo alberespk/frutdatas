@@ -156,3 +156,18 @@ describe("produção própria", () => {
     expect(m.dados.origem_id).toBe(de(g, "colheita_itens")[0].dados.id);
   });
 });
+
+describe("perda e ajuste", () => {
+  it("perda sai do estoque com motivo", async () => {
+    const { montarPerda } = await import("@/lib/lancamentos");
+    const [g] = montarPerda({ data: "2026-11-02", produto_id: "p1", classificacao_id: null, quantidade: 3, custo_unitario: 20, motivo_perda_id: "mp1", observacao: null });
+    expect(g.dados).toMatchObject({ tipo: "perda", quantidade: -3, motivo_perda_id: "mp1" });
+  });
+  it("ajuste lança só a diferença", async () => {
+    const { montarAjuste } = await import("@/lib/lancamentos");
+    const base = { data: "2026-11-02", produto_id: "p1", classificacao_id: null, custoSaida: 20 };
+    expect(montarAjuste({ ...base, saldoSistema: 10, contado: 10 })).toHaveLength(0);
+    expect(montarAjuste({ ...base, saldoSistema: 10, contado: 8 })[0].dados).toMatchObject({ quantidade: -2, custo_unitario: 20 });
+    expect(montarAjuste({ ...base, saldoSistema: 10, contado: 12 })[0].dados).toMatchObject({ quantidade: 2, custo_unitario: null });
+  });
+});

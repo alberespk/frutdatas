@@ -13,7 +13,7 @@ estoque, vendas com romaneio, viagens e financeiro. Feito para o celular e para 
 | --- | --- | --- |
 | 1 | Base offline, login, banco completo, cadastros | ✅ |
 | 2 | Compras, produção própria (ciclos, despesas, colheitas) e despesas | ✅ |
-| 3 | Estoque | |
+| 3 | Estoque (saldo, custo médio, parados, perdas, ajuste de contagem) | ✅ |
 | 4 | Vendas e romaneio | |
 | 5 | Viagens/fretes | |
 | 6 | Financeiro | |
@@ -40,11 +40,17 @@ Num projeto Supabase novo, rode as migrações em ordem no SQL Editor e depois o
 2. O **primeiro** usuário criado vira **sócio** (letra de romaneio A). Os seguintes entram como **campo** (B, C…).
 3. Um sócio muda nome, perfil e letra em **Mais → Usuários**.
 
-### Publicar (Vercel)
+### Publicar (AWS Amplify)
 
-1. Em vercel.com, **Add New → Project** e importe o repositório `frutdatas`.
-2. Em **Environment Variables**, crie `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-3. Deploy. O comando de build (`npm run build`) e a pasta `out` são detectados; se pedir, informe *Output Directory* = `out`.
+O repositório já traz `amplify.yml` (build estático na pasta `out`, Node 22) e `customHttp.yml`
+(o service worker nunca fica preso em cache).
+
+1. No console do Amplify: **Create new app → GitHub →** repositório `frutdatas`, branch `main`.
+2. Em **Advanced settings → Environment variables**, crie `NEXT_PUBLIC_SUPABASE_URL` e
+   `NEXT_PUBLIC_SUPABASE_ANON_KEY` (Supabase → Project Settings → API).
+3. Salve e faça o deploy. Se o Amplify detectar Next.js com servidor (SSR), troque em
+   **App settings → General → Platform** para **Web** (site estático).
+4. Cada merge na `main` publica uma versão nova sozinho.
 
 ## Como funciona o modo offline
 

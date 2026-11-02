@@ -293,3 +293,60 @@ export function montarColheita(e: EntradaColheita): Gravacao[] {
   }
   return g;
 }
+
+// ---------------------------------------------------------------- estoque
+
+export function montarPerda(p: {
+  data: string;
+  produto_id: string;
+  classificacao_id: string | null;
+  quantidade: number;
+  custo_unitario: number | null;
+  motivo_perda_id: string | null;
+  observacao: string | null;
+}): Gravacao[] {
+  if (!(p.quantidade > 0)) throw new Error("Informe a quantidade perdida.");
+  return [
+    {
+      tabela: "movimentos_estoque",
+      dados: {
+        data: p.data,
+        produto_id: p.produto_id,
+        classificacao_id: p.classificacao_id,
+        tipo: "perda",
+        quantidade: -p.quantidade,
+        custo_unitario: p.custo_unitario,
+        motivo_perda_id: p.motivo_perda_id,
+        observacao: p.observacao,
+      },
+    },
+  ];
+}
+
+/** Ajuste de contagem: lança a diferença entre o contado e o saldo do sistema. */
+export function montarAjuste(p: {
+  data: string;
+  produto_id: string;
+  classificacao_id: string | null;
+  saldoSistema: number;
+  contado: number;
+  custoSaida: number;
+}): Gravacao[] {
+  const diferenca = Math.round((p.contado - p.saldoSistema) * 1000) / 1000;
+  if (diferenca === 0) return [];
+  return [
+    {
+      tabela: "movimentos_estoque",
+      dados: {
+        data: p.data,
+        produto_id: p.produto_id,
+        classificacao_id: p.classificacao_id,
+        tipo: "ajuste",
+        quantidade: diferenca,
+        // Sobra entra pelo custo médio (null); falta sai pelo custo das entradas mais antigas.
+        custo_unitario: diferenca > 0 ? null : p.custoSaida,
+        observacao: `Contagem: ${p.contado} (sistema: ${p.saldoSistema})`,
+      },
+    },
+  ];
+}

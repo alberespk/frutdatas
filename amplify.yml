@@ -1,0 +1,21 @@
+# Build do FrutDatas no AWS Amplify Hosting (site estático gerado em "out").
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - nvm install 22
+        - nvm use 22
+        - npm ci
+    build:
+      commands:
+        # As variáveis NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY
+        # vêm de Amplify > Hosting > Environment variables.
+        - npm run build
+  artifacts:
+    baseDirectory: out
+    files:
+      - "**/*"
+  cache:
+    paths:
+      - node_modules/**/*

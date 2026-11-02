@@ -44,3 +44,11 @@ export async function ultimoPreco(fornecedorId: string, produtoId: string, class
     ? { preco: Number(escolhido.i.preco_unitario), data: String(escolhido.c!.data), doFornecedor: !!doFornecedor }
     : null;
 }
+
+/** Estoque calculado a partir de todos os movimentos do aparelho. */
+export function useEstoque(dataHoje: string) {
+  return useLiveQuery(async () => {
+    const { calcularEstoque } = await import("./estoque");
+    return calcularEstoque(await db.t("movimentos_estoque").toArray(), dataHoje);
+  }, [dataHoje]);
+}
