@@ -5,7 +5,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { Suspense, useMemo, useState, type ReactNode } from "react";
 import { Estrutura } from "@/components/Estrutura";
 import { EntradaNumero, Opcoes } from "@/components/lancamento";
-import { Botao, Cartao, classeEntrada, Rotulo, Vazio } from "@/components/ui";
+import { Botao, Cartao, classeEntrada, Rotulo, Vazio, Carregando } from "@/components/ui";
 import { ativos, ordenarPorNome, useMapa, useTabela } from "@/lib/consultas";
 import { db } from "@/lib/db";
 import { formatarData, formatarMoeda, formatarNumero, hoje } from "@/lib/formato";
@@ -78,7 +78,7 @@ function Viagens() {
         aoMudar={setFiltro}
       />
       {viagens === undefined ? (
-        <Vazio>Carregando…</Vazio>
+        <Carregando />
       ) : !lista.length ? (
         <Vazio>Nenhuma viagem {filtro === "abertas" ? "em aberto" : "lançada"}.</Vazio>
       ) : (
@@ -198,7 +198,7 @@ function DetalheViagem({ id, aoVoltar }: { id: string; aoVoltar: () => void }) {
     return { viagem, vendas, vendaItens, movimentos, despesas, comprasVolta, compraItens, clientes, fornecedores, categorias, veiculo, motorista };
   }, [id]);
 
-  if (dados === undefined) return <Vazio>Carregando…</Vazio>;
+  if (dados === undefined) return <Carregando />;
   if (!dados) return <Vazio>Viagem não encontrada.</Vazio>;
   const { viagem, vendas, vendaItens, despesas, comprasVolta, compraItens, clientes, fornecedores, categorias } = dados;
   const r = resultadoViagem(dados);

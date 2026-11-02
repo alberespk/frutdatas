@@ -3,7 +3,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 import { Estrutura } from "@/components/Estrutura";
 import { EntradaNumero, Opcoes, Selo } from "@/components/lancamento";
-import { Botao, Cartao, classeEntrada, Rotulo, Vazio } from "@/components/ui";
+import { Botao, Cartao, classeEntrada, Rotulo, Vazio, Carregando } from "@/components/ui";
 import { useMapa, useTabela } from "@/lib/consultas";
 import { exportarExcel, exportarPdf, type TabelaRelatorio } from "@/lib/exportar";
 import {
@@ -108,7 +108,7 @@ function Resumo() {
   const [avulso, setAvulso] = useState<Natureza | null>(null);
   const d = hoje();
 
-  if (!movs || !titulos || !baixas) return <Vazio>Carregando…</Vazio>;
+  if (!movs || !titulos || !baixas) return <Carregando />;
   const saldo = saldoCaixa(movs);
   const temInicial = movs.some((m) => m.natureza === "saldo_inicial");
   const pagar = agruparPorPessoa(titulos, baixas, "pagar", d, nome);
@@ -271,7 +271,7 @@ function Contas({ tipo }: { tipo: "pagar" | "receber" }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [titulos, baixas, tipo, d, nome],
   );
-  if (!grupos || !baixas) return <Vazio>Carregando…</Vazio>;
+  if (!grupos || !baixas) return <Carregando />;
   const lista = grupos.filter((g) => !busca || g.nome.toLowerCase().includes(busca.toLowerCase()));
   const total = arred2(grupos.reduce((s, g) => s + g.aberto, 0));
   const vencido = arred2(grupos.reduce((s, g) => s + g.vencido, 0));
@@ -488,7 +488,7 @@ function Caixa() {
   const { salvar } = useSessao();
   const movs = useTabela("movimentos_caixa");
   const [mes, setMes] = useState(inicioDoMes(hoje()));
-  if (!movs) return <Vazio>Carregando…</Vazio>;
+  if (!movs) return <Carregando />;
   const de = mes;
   const ate = fimDoMes(mes);
   const f = fluxoCaixa(movs, de, ate);
@@ -589,7 +589,7 @@ function Margens() {
   const viagens = useMapa("viagens");
   const [mes, setMes] = useState(inicioDoMes(hoje()));
   const [visao, setVisao] = useState<"produto" | "cliente" | "viagem">("produto");
-  if (!vendas || !itens || !movs) return <Vazio>Carregando…</Vazio>;
+  if (!vendas || !itens || !movs) return <Carregando />;
   const de = mes;
   const ate = fimDoMes(mes);
   const r = calcularMargens({ vendas, itens, movimentos: movs, de, ate });

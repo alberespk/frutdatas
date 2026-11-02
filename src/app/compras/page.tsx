@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { Estrutura } from "@/components/Estrutura";
 import { Opcoes, Selo } from "@/components/lancamento";
 import { PagarTitulo } from "@/components/PagarTitulo";
-import { Botao, Cartao, classeEntrada, Vazio } from "@/components/ui";
+import { Botao, Cartao, classeEntrada, Vazio, Carregando } from "@/components/ui";
 import { useMapa, useTabela } from "@/lib/consultas";
 import { db } from "@/lib/db";
 import { formatarData, formatarDataHora, formatarMoeda, formatarNumero, hoje, normalizar } from "@/lib/formato";
@@ -68,7 +68,7 @@ export default function Compras() {
         aoMudar={setFiltro}
       />
       {compras === undefined ? (
-        <Vazio>Carregando…</Vazio>
+        <Carregando />
       ) : !linhas.length ? (
         <Vazio>Nenhuma compra encontrada.</Vazio>
       ) : (
@@ -123,7 +123,7 @@ function DetalheCompra({ id, aoVoltar }: { id: string; aoVoltar: () => void }) {
     return { compra, itens, titulos, baixas, movCaixa, movEstoque, fornecedor, produtos, classes };
   }, [id]);
 
-  if (dados === undefined) return <Vazio>Carregando…</Vazio>;
+  if (dados === undefined) return <Carregando />;
   if (!dados) return <Vazio>Compra não encontrada.</Vazio>;
   const { compra, itens, titulos, baixas, fornecedor, produtos, classes } = dados;
   const titulo = titulos[0];

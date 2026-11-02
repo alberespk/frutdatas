@@ -22,6 +22,15 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="pt-BR">
+      <head>
+        {/* Guarda o aviso de instalação do navegador antes do app terminar de abrir. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__avisoInstalacao=e;});",
+          }}
+        />
+      </head>
       <body>
         <ProvedorSessao>{children}</ProvedorSessao>
         <RegistrarServiceWorker />

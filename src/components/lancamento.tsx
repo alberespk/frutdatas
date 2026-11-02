@@ -4,7 +4,7 @@ import { useState, type ReactNode } from "react";
 import { formatarData, lerNumero, normalizar, numeroParaCampo, somarDias } from "@/lib/formato";
 import type { FormaPagamento, Pagamento } from "@/lib/lancamentos";
 import type { Registro } from "@/lib/tabelas";
-import { classeEntrada, Rotulo, Vazio } from "./ui";
+import { Carregando, classeEntrada, Rotulo, Vazio } from "./ui";
 
 /** Lista com busca para escolher um registro com um toque. */
 export function EscolherDaLista({
@@ -35,7 +35,9 @@ export function EscolherDaLista({
         <input className={classeEntrada} type="search" placeholder="Buscar…" value={busca} onChange={(e) => setBusca(e.target.value)} />
       ) : null}
       {extra}
-      {lista.length === 0 ? (
+      {itens === undefined ? (
+        <Carregando />
+      ) : lista.length === 0 ? (
         <Vazio>{busca ? "Nada encontrado." : vazio}</Vazio>
       ) : (
         <div className="overflow-hidden rounded-2xl border border-borda">

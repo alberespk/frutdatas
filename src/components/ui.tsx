@@ -119,3 +119,28 @@ export function EmBreve({ etapa, titulo, itens }: { etapa: number; titulo: strin
     </Cartao>
   );
 }
+
+/** Rodinha girando, para mostrar que algo ainda está carregando. */
+export function Spinner({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg className={`animate-spin ${className}`} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-20" />
+      <path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** Bloco de "Carregando dados…" com a rodinha, no lugar de listas e telas. */
+export function Carregando({ texto = "Carregando dados…" }: { texto?: string }) {
+  return (
+    <div role="status" className="flex items-center justify-center gap-3 rounded-2xl border border-borda bg-white p-8 text-suave">
+      <Spinner className="h-6 w-6 text-serra" />
+      <span>{texto}</span>
+    </div>
+  );
+}
+
+/** Barra pulsando no lugar de um número que ainda não chegou. */
+export function Esqueleto({ className = "h-6 w-24" }: { className?: string }) {
+  return <span aria-label="Carregando" className={`inline-block animate-pulse rounded-md bg-current opacity-15 align-middle ${className}`} />;
+}

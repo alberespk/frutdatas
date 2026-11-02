@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Estrutura } from "@/components/Estrutura";
 import { Destaques, Painel } from "@/components/Painel";
-import { Cartao } from "@/components/ui";
+import { Cartao, Esqueleto } from "@/components/ui";
 import { useEstoque, useMapa } from "@/lib/consultas";
 import { db } from "@/lib/db";
 import { estaParado } from "@/lib/estoque";
@@ -44,7 +44,7 @@ export default function Inicio() {
           { rotulo: "Produtos", n: contagem?.produtos, href: "/cadastros/produtos/" },
         ].map((c) => (
           <Link key={c.rotulo} href={c.href} className="rounded-2xl border border-borda bg-white p-3 text-center">
-            <div className="font-marca text-3xl font-bold text-serra">{c.n ?? "–"}</div>
+            <div className="font-marca text-3xl font-bold text-serra">{c.n ?? <Esqueleto className="h-8 w-10" />}</div>
             <div className="text-sm text-suave">{c.rotulo}</div>
           </Link>
         ))}
