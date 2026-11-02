@@ -8,7 +8,7 @@ const LANCAMENTOS = [
   { rotulo: "Colheita", icone: "🍓", href: "/producao/colheita/", campo: true },
   { rotulo: "Despesa", icone: "⛽", href: "/despesas/nova/", campo: true },
   { rotulo: "Venda", icone: "🧾", etapa: 4, campo: false },
-  { rotulo: "Perda", icone: "🗑️", etapa: 3, campo: true },
+  { rotulo: "Perda", icone: "🗑️", href: "/estoque/perda/", campo: true },
   { rotulo: "Pagamento", icone: "💸", etapa: 6, campo: false },
 ];
 

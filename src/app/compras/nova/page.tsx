@@ -1,7 +1,7 @@
 "use client";
 // Lançamento de compra em 3 passos: fornecedor → itens → pagamento.
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Estrutura } from "@/components/Estrutura";
 import { EntradaNumero, EscolherDaLista, EscolherPagamento, Opcoes, Passos } from "@/components/lancamento";
 import { Botao, Cartao, classeEntrada, Rotulo } from "@/components/ui";
@@ -250,12 +250,19 @@ function NovoItem({
   const [preco, setPreco] = useState<number | null>(null);
   const [sugestao, setSugestao] = useState<string | null>(null);
 
+  // Só vale a resposta da última consulta (o toque em outra classificação descarta a anterior).
+  const consulta = useRef(0);
   const sugerir = async (p: Registro, c: string | null) => {
+    const minha = ++consulta.current;
     const u = await ultimoPreco(fornecedorId, p.id, c);
+    if (minha !== consulta.current) return;
     if (u) {
       setPreco(u.preco);
       setSugestao(`Último preço ${u.doFornecedor ? "deste fornecedor" : "pago"}: ${formatarMoeda(u.preco)} em ${formatarData(u.data)}`);
-    } else setSugestao(null);
+    } else {
+      setPreco(null);
+      setSugestao(null);
+    }
   };
 
   if (!produto) {
