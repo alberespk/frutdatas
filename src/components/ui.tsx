@@ -68,15 +68,21 @@ export function ItemLista({
   );
 }
 
-export function Rotulo({ texto, obrigatorio, children, ajuda, erro }: {
+/**
+ * Título de um campo. Com `grupo`, vira um grupo (para conjuntos de botões),
+ * porque um <label> em volta de botões faria o toque no título apertar o 1º botão.
+ */
+export function Rotulo({ texto, obrigatorio, children, ajuda, erro, grupo }: {
   texto: string;
   obrigatorio?: boolean;
   children: ReactNode;
   ajuda?: string;
   erro?: string;
+  grupo?: boolean;
 }) {
+  const Tag = grupo ? "div" : "label";
   return (
-    <label className="block">
+    <Tag className="block" {...(grupo ? { role: "group", "aria-label": texto } : {})}>
       <span className="mb-1 block font-semibold">
         {texto}
         {obrigatorio ? <span className="text-morango"> *</span> : null}
@@ -87,7 +93,7 @@ export function Rotulo({ texto, obrigatorio, children, ajuda, erro }: {
       ) : ajuda ? (
         <span className="mt-1 block text-sm text-suave">{ajuda}</span>
       ) : null}
-    </label>
+    </Tag>
   );
 }
 

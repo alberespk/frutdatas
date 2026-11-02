@@ -89,7 +89,13 @@ export function CampoFormulario({
   }
 
   return (
-    <Rotulo texto={campo.rotulo} obrigatorio={campo.obrigatorio} ajuda={campo.ajuda} erro={erro}>
+    <Rotulo
+      texto={campo.rotulo}
+      obrigatorio={campo.obrigatorio}
+      ajuda={campo.ajuda}
+      erro={erro}
+      grupo={campo.tipo === "opcoes"}
+    >
       {entrada}
     </Rotulo>
   );

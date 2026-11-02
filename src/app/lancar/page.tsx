@@ -1,12 +1,13 @@
 "use client";
+import Link from "next/link";
 import { Estrutura } from "@/components/Estrutura";
 import { useSessao } from "@/lib/sessao";
 
 const LANCAMENTOS = [
-  { rotulo: "Compra", icone: "🧺", etapa: 2, campo: true },
-  { rotulo: "Colheita", icone: "🍓", etapa: 2, campo: true },
+  { rotulo: "Compra", icone: "🧺", href: "/compras/nova/", campo: true },
+  { rotulo: "Colheita", icone: "🍓", href: "/producao/colheita/", campo: true },
+  { rotulo: "Despesa", icone: "⛽", href: "/despesas/nova/", campo: true },
   { rotulo: "Venda", icone: "🧾", etapa: 4, campo: false },
-  { rotulo: "Despesa", icone: "⛽", etapa: 5, campo: true },
   { rotulo: "Perda", icone: "🗑️", etapa: 3, campo: true },
   { rotulo: "Pagamento", icone: "💸", etapa: 6, campo: false },
 ];
@@ -16,20 +17,27 @@ export default function Lancar() {
   return (
     <Estrutura titulo="Lançar">
       <div className="grid grid-cols-2 gap-3">
-        {LANCAMENTOS.filter((l) => ehSocio || l.campo).map((l) => (
-          <button
-            key={l.rotulo}
-            type="button"
-            disabled
-            className="flex aspect-square flex-col items-center justify-center gap-2 rounded-3xl border-2 border-borda bg-white text-center disabled:opacity-70"
-          >
-            <span className="text-5xl">{l.icone}</span>
-            <span className="font-marca text-2xl font-bold">{l.rotulo}</span>
-            <span className="rounded-full bg-maracuja/20 px-2 text-xs font-semibold">Etapa {l.etapa}</span>
-          </button>
-        ))}
+        {LANCAMENTOS.filter((l) => ehSocio || l.campo).map((l) => {
+          const conteudo = (
+            <>
+              <span className="text-5xl">{l.icone}</span>
+              <span className="font-marca text-2xl font-bold">{l.rotulo}</span>
+              {l.etapa ? <span className="rounded-full bg-maracuja/20 px-2 text-xs font-semibold">Etapa {l.etapa}</span> : null}
+            </>
+          );
+          const classe =
+            "flex aspect-square flex-col items-center justify-center gap-2 rounded-3xl border-2 bg-white text-center";
+          return l.href ? (
+            <Link key={l.rotulo} href={l.href} className={`${classe} border-serra active:bg-fundo`}>
+              {conteudo}
+            </Link>
+          ) : (
+            <div key={l.rotulo} className={`${classe} border-borda opacity-60`}>
+              {conteudo}
+            </div>
+          );
+        })}
       </div>
-      <p className="text-center text-sm text-suave">Os lançamentos são liberados a partir da Etapa 2.</p>
     </Estrutura>
   );
 }

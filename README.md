@@ -12,7 +12,7 @@ estoque, vendas com romaneio, viagens e financeiro. Feito para o celular e para 
 | Etapa | Conteúdo | Situação |
 | --- | --- | --- |
 | 1 | Base offline, login, banco completo, cadastros | ✅ |
-| 2 | Compras e produção própria | |
+| 2 | Compras, produção própria (ciclos, despesas, colheitas) e despesas | ✅ |
 | 3 | Estoque | |
 | 4 | Vendas e romaneio | |
 | 5 | Viagens/fretes | |
